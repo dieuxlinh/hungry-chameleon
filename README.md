@@ -1,4 +1,4 @@
-# Python Project Template Repository
+# Softdes-2024 final project
 
 This is a template repository for a Python project. Feel free to use and edit
 this repository (including this file) for your needs. Below, find some
