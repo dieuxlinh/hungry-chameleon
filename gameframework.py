@@ -72,7 +72,7 @@ class Chameleon:
         self.position = pygame.math.Vector2(400, 300)
         self.image = pygame.Surface(
             (50, 50)
-        )  # Placeholder image, replace this with your actual chameleon image
+        )  # Placeholder image, replace which images
         self.rect = self.image.get_rect(center=self.position)
 
         # Start action should be rest
@@ -91,7 +91,7 @@ class Chameleon:
 
     def stick_out_tongue(self):
         # Implement the behavior for sticking out tongue
-        pass  # Placeholder, you need to implement this
+        pass  # Placeholder, need to implement (change out images from no tongue to tongue out)
 
 
 class Fly:
