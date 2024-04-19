@@ -3,7 +3,8 @@ import pygame
 from pygame.math import Vector2
 from pygame.transform import rotozoom
 
-from utils import load_sprite, wrap_position, get_random_velocity 
+from utils import load_sprite, wrap_position, get_random_velocity
+
 
 class GameObject:
     def __init__(self, position, sprite, velocity):
@@ -61,13 +62,9 @@ class Fly(GameObject):
 
         super().__init__(
             position,
-            pygame.transform.scale(load_sprite("fly"), get_random_velocity(1, 3)), 
+            pygame.transform.scale(load_sprite("fly"), (20, 20)),
+            get_random_velocity(1, 3),
         )
-
-    def rotate(self, clockwise=True):
-        sign = 1 if clockwise else -1
-        angle = self.MANEUVERABILITY * sign
-        self.direction.rotate_ip(angle)
 
     def draw(self, surface):
         angle = self.direction.angle_to(UP)
@@ -75,6 +72,11 @@ class Fly(GameObject):
         rotated_surface_size = Vector2(rotated_surface.get_size())
         blit_position = self.position - rotated_surface_size * 0.5
         surface.blit(rotated_surface, blit_position)
+
+    def rotate(self, clockwise=True):
+        sign = 1 if clockwise else -1
+        angle = self.MANEUVERABILITY * sign
+        self.direction.rotate_ip(angle)
 
 
 UP = Vector2(0, -1)
