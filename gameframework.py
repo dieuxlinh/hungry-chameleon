@@ -27,22 +27,21 @@ class GameController:
 
     def handle_input(self):
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT or (event.key == pygame.K_ESCAPE):
                 pygame.quit()
                 quit()
 
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT]:
+        is_keys_pressed = pygame.key.get_pressed()
+        if is_keys_pressed[pygame.K_LEFT]:
             self.chameleon.rotate(
                 clockwise=False
             )  # Rotate chameleon counterclockwise for left arrow
-        if keys[pygame.K_RIGHT]:
+        if is_keys_pressed[pygame.K_RIGHT]:
             self.chameleon.rotate(
                 clockwise=True
             )  # Rotate chameleon clockwise for right arrow
-        if keys[pygame.K_SPACE]:
+        if is_keys_pressed[pygame.K_SPACE]:
             self.chameleon.stick_out_tongue()  # Trigger chameleon action for spacebar
-
 
 class GameView:
     def __init__(self, game, chameleon):
@@ -64,14 +63,17 @@ class GameView:
         self.screen.blit(rotated_surface, rotated_rect)
         pygame.display.update()
 
+class Spaceship(GameObject):
+    def __init__(self, position):
+        
 
-class Chameleon:
-    def __init__(self):
+class Chameleon(GameObject):
+    MANEUVERABILITY = 3
+    def __init__(self, position):
         # Start in center screen
-        self.position = pygame.math.Vector2(400, 300)
-        self.image = pygame.Surface(
-            (50, 50)
-        )  # Placeholder image, replace which images
+        self.direction = Vector2(UP)
+        # replace with actual image
+        super().__init__(position, load_sprite("spaceship"), Vector2(0))
         self.rect = self.image.get_rect(center=self.position)
 
         # Start action should be rest
@@ -85,12 +87,19 @@ class Chameleon:
 
     def rotate(self, clockwise=True):
         sign = 1 if clockwise else -1
-        angle = 5 * sign  # Rotation angle in degrees
+        angle = self.MANEUVERABILITY * sign  # Rotation angle in degrees
         self.direction.rotate_ip(angle)  # Rotate direction vector in place
 
     def stick_out_tongue(self):
         # Implement the behavior for sticking out tongue
         pass  # Placeholder, need to implement (change out images from no tongue to tongue out)
+
+    def draw(self, surface):
+        angle = self.direction.angle_to(UP)
+        rotated_surface = rotozoom(self.sprite, angle, 1.0)
+        rotated_surface_size = Vector2(rotated_surface.get_size())
+        blit_position = self.position - rotated_surface_size * 0.5
+        surface.blit(rotated_surface, blit_position)
 
 
 class Fly:
