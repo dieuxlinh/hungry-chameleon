@@ -48,14 +48,25 @@ class HungryChameleon:
         pygame.display.set_caption("Hungry Chameleon")
 
     def _handle_input(self):
-
-        # Quitting the game
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (
                 event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
             ):
                 quit()
-        pass
+
+        is_keys_pressed = pygame.key.get_pressed()
+
+        if is_keys_pressed[pygame.K_LEFT]:
+            self.chameleon.rotate(
+                clockwise=False
+            )  # Rotate chameleon counterclockwise for left arrow
+        if is_keys_pressed[pygame.K_RIGHT]:
+            self.chameleon.rotate(
+                clockwise=True
+            )  # Rotate chameleon clockwise for right arrow
+        if is_keys_pressed[pygame.K_SPACE]:
+            pass
+            # self.chameleon.stick_out_tongue()  # Trigger chameleon action for spacebar
 
     def _process_game_logic(self):
         for game_object in self._get_game_objects():
