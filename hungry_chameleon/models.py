@@ -3,8 +3,7 @@ import pygame
 from pygame.math import Vector2
 from pygame.transform import rotozoom
 
-from utils import load_sprite, wrap_position
-
+from utils import load_sprite, wrap_position, get_random_velocity 
 
 class GameObject:
     def __init__(self, position, sprite, velocity):
@@ -62,8 +61,7 @@ class Fly(GameObject):
 
         super().__init__(
             position,
-            pygame.transform.scale(load_sprite("fly"), (40, 40)),
-            (0, 0),
+            pygame.transform.scale(load_sprite("fly"), get_random_velocity(1, 3)), 
         )
 
     def rotate(self, clockwise=True):

@@ -2,9 +2,10 @@ import pygame
 
 from utils import load_sprite
 from models import Chameleon, Fly
-
+from utils import get_random_position, load_sprite
 
 class HungryChameleon:
+    MIN_FLY_DISTANCE = 250
     def __init__(self):
         self._init_pygame()
         self.screen = pygame.display.set_mode((800, 600))
@@ -13,9 +14,21 @@ class HungryChameleon:
         )
         self.clock = pygame.time.Clock()
 
+        
         self.chameleon = Chameleon((400, 300))
-        self.fly = [Fly((400, 300)) for _ in range(6)]
+        self.fly = [Fly (get_random_position(self.screen)) for _ in range(6)]
 
+        for _ in range(6):
+            while True: 
+                position = get_random_position(self.screen)
+                if (
+                    position.distance_to(self.chameleon.position) 
+                    > self.MIN_FLY_DISTANCE
+                    
+                ):
+                    break
+            self.fly.append(Fly(position))
+            
     def main_loop(self):
         while True:
             self._handle_input()
