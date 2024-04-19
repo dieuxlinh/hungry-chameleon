@@ -5,6 +5,8 @@ from pygame.transform import rotozoom
 
 from utils import load_sprite, wrap_position, get_random_velocity
 
+UP = Vector2(0, -1)
+
 
 class GameObject:
     def __init__(self, position, sprite, velocity):
@@ -52,6 +54,15 @@ class Chameleon(GameObject):
         blit_position = self.position - rotated_surface_size * 0.5
         surface.blit(rotated_surface, blit_position)
 
+    def stick_out_tongue():
+        """
+        if space bar not pressed:
+            image = "chameleon_no_tongue"
+        else/ if space bar is pressed:
+            image = "chameleon_with_tongue" for 0.5 seconds
+        """
+        pass
+
 
 class Fly(GameObject):
 
@@ -77,6 +88,3 @@ class Fly(GameObject):
         sign = 1 if clockwise else -1
         angle = self.MANEUVERABILITY * sign
         self.direction.rotate_ip(angle)
-
-
-UP = Vector2(0, -1)
