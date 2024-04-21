@@ -1,25 +1,55 @@
-import pygame
+"""
+A simple Pygame-based game module featuring a chameleon catching flies.
 
-from utils import load_sprite
+The module is structured using the MVC pattern:
+- GameModel manages the game's state and object interactions.
+- GameView handles all the graphical output.
+- GameController orchestrates the game loop, input handling, and updates.
+"""
+
+import pygame
 from models import Chameleon, Fly
 from utils import get_random_position, load_sprite
 
 
-class HungryChameleon:
+# Model
+class GameModel:
+    """
+    Represents the game model, responsible for managing the game state,
+    including initializing and updating all game objects.
+
+    Attributes:
+        screen (pygame.Surface): The display where game objects are drawn.
+        chameleon (Chameleon): The main character controlled by the player.
+        fly (list of Fly): List of fly objects that chameleon aims to catch.
+    """
+
     MIN_FLY_DISTANCE = 250
 
-    def __init__(self):
-        self._init_pygame()
-        self.screen = pygame.display.set_mode((800, 600))
-        self.background = pygame.transform.scale(
-            load_sprite("Sky_Blue", False), (1000, 1000)
-        )
-        self.clock = pygame.time.Clock()
+    def __init__(self, screen):
+        """
+        Initializes the game model with a display surface.
 
-        self.chameleon = Chameleon((400, 300))
-        self.fly = []
+        Args:
+            screen (pygame.Surface): The display surface.
+        """
+        self.screen = screen
+        self.chameleon = Chameleon((400, 300), self.screen)
+        self.fly = self._init_flies(6)
 
-        for _ in range(6):
+    def _init_flies(self, count):
+        """
+        Initializes a specified number of flies at positions at least
+        MIN_FLY_DISTANCE away from the chameleon.
+
+        Args:
+            count (int): Number of flies to initialize.
+
+        Returns:
+            flies (list): A list of initialized flies.
+        """
+        flies = []
+        for _ in range(count):
             while True:
                 position = get_random_position(self.screen)
                 if (
@@ -27,60 +57,132 @@ class HungryChameleon:
                     > self.MIN_FLY_DISTANCE
                 ):
                     break
-            self.fly.append(Fly(position))
+            flies.append(Fly(position, self.screen))
+        return flies
 
-    def main_loop(self):
-        while True:
-            self._handle_input()
-            self._process_game_logic()
-            self._draw()
+    def update(self):
+        """
+        Updates all game objects in the model. Moves each object and checks
+        for collisions.
+        """
+        for game_object in self.get_game_objects():
+            game_object.move()
+        self.check_collisions()
 
-    def _get_game_objects(self):
-        game_objects = [*self.fly]
+    def get_game_objects(self):
+        """
+        Retrieves all active game objects.
 
-        if self.chameleon:
-            game_objects.append(self.chameleon)
+        Returns:
+            list: A list containing the chameleon and all flies.
+        """
+        return [*self.fly, self.chameleon] if self.chameleon else self.fly
 
-        return game_objects
+    def check_collisions(self):
+        """
+        Checks for collisions between the chameleon and any fly. Sets the
+        chameleon to None if a collision occurs, effectively removing it from
+        the game.
+        """
+        for fly in self.fly:
+            if fly.collides_with(self.chameleon):
+                self.chameleon = None  # Chameleon is 'out' on collision
+                break
+
+
+# View
+class GameView:
+    """
+    Represents the visual aspect of the game, rendering all visual
+    elements on the screen.
+
+    Attributes:
+        screen (pygame.Surface): The display surface for drawing the game.
+        background (pygame.Surface): The background image of the game scene.
+    """
+
+    def __init__(self, screen):
+        """
+        Initializes the game view with a display surface.
+
+        Args:
+            screen (pygame.Surface): The display surface.
+        """
+        self.screen = screen
+        self.background = pygame.transform.scale(
+            load_sprite("Sky_Blue", False), (1000, 1000)
+        )
+
+    def draw(self, game_objects):
+        """
+        Draws the background and all active game objects to the screen.
+
+        Args:
+            game_objects (list): A list of game objects to be drawn.
+        """
+        self.screen.blit(self.background, (0, 0))
+        for game_object in game_objects:
+            game_object.draw()
+        pygame.display.update()
+
+
+# Controller
+class GameController:
+    """
+    Controls the game flow, handling game events and updates.
+
+    Attributes:
+        model (GameModel): The game's model managing the state.
+        view (GameView): The game's view handling rendering.
+        clock (pygame.time.Clock): Clock for managing the game's frame rate.
+    """
+
+    def __init__(self, model, view):
+        """
+        Initializes the game controller with the model and view.
+
+        Args:
+            model (GameModel): The game model.
+            view (GameView): The game view.
+        """
+        self.model = model
+        self.view = view
+        self.clock = pygame.time.Clock()
+        self._init_pygame()
 
     def _init_pygame(self):
+        """
+        Initializes Pygame and sets up the game window.
+        """
         pygame.init()
         pygame.display.set_caption("Hungry Chameleon")
 
-    def _handle_input(self):
+    def run(self):
+        """
+        Main game loop that handles input, updates the game model, and renders
+        the game view.
+        """
+        while True:
+            self.handle_input()
+            self.model.update()
+            self.view.draw(self.model.get_game_objects())
+            self.clock.tick(60)
+
+    def handle_input(self):
+        """
+        Handles user inputs.
+
+        Responds to left and right keys to rotate the chameleon.
+        Exits the game if the quit event is triggered or if ESC key is pressed.
+        """
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (
                 event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
             ):
                 quit()
 
-        is_keys_pressed = pygame.key.get_pressed()
-
-        if is_keys_pressed[pygame.K_LEFT]:
-            self.chameleon.rotate(
-                clockwise=False
-            )  # Rotate chameleon counterclockwise for left arrow
-        if is_keys_pressed[pygame.K_RIGHT]:
-            self.chameleon.rotate(
-                clockwise=True
-            )  # Rotate chameleon clockwise for right arrow
-        if is_keys_pressed[pygame.K_SPACE]:
-            pass
-            # self.chameleon.stick_out_tongue()  # Trigger chameleon action for spacebar
-
-    def _process_game_logic(self):
-        for game_object in self._get_game_objects():
-            game_object.move(self.screen)
-
-        if self.chameleon:
-            for fly in self.fly:
-                if fly.collides_with(self.chameleon):
-                    self.chameleon = None
-                    break
-
-    def _draw(self):
-        self.screen.blit(self.background, (0, 0))
-        for game_object in self._get_game_objects():
-            game_object.draw(self.screen)
-        pygame.display.flip()
-        self.clock.tick(60)
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            self.model.chameleon.rotate(clockwise=False)
+        if keys[pygame.K_RIGHT]:
+            self.model.chameleon.rotate(clockwise=True)
