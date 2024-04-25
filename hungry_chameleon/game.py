@@ -10,7 +10,11 @@ The module is structured using the MVC pattern:
 import pygame
 from models import Chameleon, Fly
 from utils import get_random_position, load_sprite
-import pygame
+from pygame.math import Vector2
+from pygame.transform import rotozoom
+
+
+UP = Vector2(0, -1)
 
 
 # Model
@@ -87,8 +91,10 @@ class GameModel:
         """
         for fly in self.fly:
             if fly.collides_with(self.chameleon):
-                self.chameleon = None  # Chameleon is 'out' on collision
-                break
+                if not self.chameleon.tongue:
+                    self.chameleon = None
+                    break
+                self.fly.remove(fly)
 
 
 # View
@@ -123,8 +129,24 @@ class GameView:
         """
         self.screen.blit(self.background, (0, 0))
         for game_object in game_objects:
-            game_object.draw()
+            # game_object.draw()
+            self.draw_object(game_object)
         pygame.display.update()
+
+    def draw_object(self, game_object):
+        """
+        Draws a game object on the screen.
+
+        Args:
+            game_object: An object in the game (fly/chameleon).
+        """
+        angle = game_object.direction.angle_to(UP)
+        rotated_surface = rotozoom(game_object.sprite, angle, 1.0)
+        rotated_surface_size = Vector2(rotated_surface.get_size())
+        blit_position = game_object.position - rotated_surface_size * 0.5
+        self.screen.blit(rotated_surface, blit_position)
+        if game_object == Chameleon:
+            game_object.sprite = game_object.no_tongue
 
 
 # Controller
@@ -188,5 +210,5 @@ class GameController:
         if keys[pygame.K_RIGHT]:
             self.model.chameleon.rotate(clockwise=True)
         if keys[pygame.K_SPACE]:
+            self.model.chameleon.tongue = True
             self.model.chameleon.change_sprite()
-

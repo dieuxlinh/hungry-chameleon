@@ -12,7 +12,7 @@ Classes:
 """
 
 import pygame
-import time 
+import time
 from pygame.math import Vector2
 from pygame.transform import rotozoom
 
@@ -54,6 +54,7 @@ class GameObject:
 
     def draw(self):
         """
+        NOT USED
         Draws the object's sprite at its current position on the screen.
         """
         blit_position = self.position - Vector2(self.radius)
@@ -104,14 +105,16 @@ class Chameleon(GameObject):
             screen (pygame.Surface): The screen on which the Chameleon is drawn.
         """
         self.direction = Vector2(UP)
-        
-        self.tongue_out =   pygame.transform.scale(
-                load_sprite("chamaeleon_with_tongue"), (150, 150))
-        
+        self.tongue = False
+        self.tongue_out = pygame.transform.scale(
+            load_sprite("chamaeleon_with_tongue"), (150, 150)
+        )
+
         self.no_tongue = pygame.transform.scale(
-                load_sprite("chamaeleon_no_tongue"), (100, 100))
-        self.tongue_start_time = 0 
-        
+            load_sprite("chamaeleon_no_tongue"), (100, 100)
+        )
+        self.tongue_start_time = 0
+
         super().__init__(
             position,
             pygame.transform.scale(
@@ -135,6 +138,7 @@ class Chameleon(GameObject):
 
     def draw(self):
         """
+        NOT USED
         Draws the Chameleon with the current rotation applied to the
         sprite.
         """
@@ -152,16 +156,23 @@ class Chameleon(GameObject):
         else/ if space bar is pressed:
             image = "chameleon_with_tongue" for 0.5 seconds
         """
-        
+
         keys = pygame.key.get_pressed()
-        
+
         if keys[pygame.K_SPACE]:
             self.sprite = self.tongue_out
-            self.tongue_start_time = pygame.time.get_ticks()  # Record the time when tongue was activated
-        elif pygame.time.get_ticks() - self.tongue_start_time >= 1000:  # If one second has passed
+            self.tongue = True
+            self.tongue_start_time = (
+                pygame.time.get_ticks()
+            )  # Record the time when tongue was activated
+        elif (
+            pygame.time.get_ticks() - self.tongue_start_time >= 1000
+        ):  # If one second has passed
             self.sprite = self.no_tongue
+            self.tongue = False
         if not keys[pygame.K_SPACE]:
             self.tongue_start_time = 0
+
 
 class Fly(GameObject):
     """
@@ -193,6 +204,7 @@ class Fly(GameObject):
 
     def draw(self):
         """
+        NOT USED
         Draws the Fly with the current rotation applied to the sprite.
         """
         angle = self.direction.angle_to(UP)
