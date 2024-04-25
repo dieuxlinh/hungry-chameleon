@@ -10,6 +10,7 @@ The module is structured using the MVC pattern:
 import pygame
 from models import Chameleon, Fly
 from utils import get_random_position, load_sprite
+import pygame
 
 
 # Model
@@ -186,3 +187,6 @@ class GameController:
             self.model.chameleon.rotate(clockwise=False)
         if keys[pygame.K_RIGHT]:
             self.model.chameleon.rotate(clockwise=True)
+        if keys[pygame.K_SPACE]:
+            self.model.chameleon.change_sprite()
+

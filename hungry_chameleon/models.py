@@ -12,7 +12,7 @@ Classes:
 """
 
 import pygame
-
+import time 
 from pygame.math import Vector2
 from pygame.transform import rotozoom
 
@@ -104,7 +104,14 @@ class Chameleon(GameObject):
             screen (pygame.Surface): The screen on which the Chameleon is drawn.
         """
         self.direction = Vector2(UP)
-
+        
+        self.tongue_out =   pygame.transform.scale(
+                load_sprite("chamaeleon_with_tongue"), (150, 150))
+        
+        self.no_tongue = pygame.transform.scale(
+                load_sprite("chamaeleon_no_tongue"), (100, 100))
+        self.tongue_start_time = 0 
+        
         super().__init__(
             position,
             pygame.transform.scale(
@@ -136,16 +143,25 @@ class Chameleon(GameObject):
         rotated_surface_size = Vector2(rotated_surface.get_size())
         blit_position = self.position - rotated_surface_size * 0.5
         self.screen.blit(rotated_surface, blit_position)
+        self.sprite = self.no_tongue
 
-    def stick_out_tongue():
+    def change_sprite(self):
         """
         if space bar not pressed:
             image = "chameleon_no_tongue"
         else/ if space bar is pressed:
             image = "chameleon_with_tongue" for 0.5 seconds
         """
-        pass
-
+        
+        keys = pygame.key.get_pressed()
+        
+        if keys[pygame.K_SPACE]:
+            self.sprite = self.tongue_out
+            self.tongue_start_time = pygame.time.get_ticks()  # Record the time when tongue was activated
+        elif pygame.time.get_ticks() - self.tongue_start_time >= 1000:  # If one second has passed
+            self.sprite = self.no_tongue
+        if not keys[pygame.K_SPACE]:
+            self.tongue_start_time = 0
 
 class Fly(GameObject):
     """
