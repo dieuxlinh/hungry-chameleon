@@ -8,7 +8,6 @@ The module is structured using the MVC pattern:
 """
 
 import pygame
-import os
 from models import Chameleon, Fly
 from utils import get_random_position, load_sprite
 from pygame.math import Vector2
@@ -46,6 +45,7 @@ class GameModel:
         self.high_score_file = "HIGH_SCORE_FILE.txt"
         self.high_score = self.load_high_score()
         self.font = pygame.font.Font("Pulang.ttf", 40)
+        self.tongue_time = 0
 
     def _init_flies(self, count):
         """
@@ -79,6 +79,13 @@ class GameModel:
             game_object.move()
         self.check_collisions()
 
+    def update_tongue_time(self):
+        """
+        Updates the tongue time.
+        """
+        if self.chameleon.tongue:
+            self.tongue_time = pygame.time.get_ticks()
+
     def get_game_objects(self):
         """
         Retrieves all active game objects.
@@ -96,15 +103,20 @@ class GameModel:
         """
         for fly in self.fly:
             if fly.collides_with(self.chameleon):
-                if not self.chameleon.tongue:
-                    self.chameleon = None
-                    break
-                else:
+                if (
+                    self.chameleon.tongue
+                    and pygame.time.get_ticks() - self.tongue_time <= 1000
+                ):
                     self.fly.remove(fly)
                     self.score += 100
                     if self.score > self.high_score:
                         self.high_score = self.score
                         self.save_high_score()
+                elif not self.chameleon.tongue and fly.collides_with(
+                    self.chameleon
+                ):
+                    self.chameleon = None
+                    break
 
     def load_high_score(self):
         """
@@ -149,8 +161,11 @@ class GameView:
         )
         self.font = pygame.font.Font("Pulang.ttf", 38)
         self.score_font = pygame.font.Font("Pulang.ttf", 38)
+        self.game_over_font = pygame.font.Font("Pulang.ttf", 64)
 
-    def draw(self, game_objects, score, high_score, color=(0, 0, 0)):
+    def draw(
+        self, game_objects, score, high_score, color=(0, 0, 0), game_over=False
+    ):
         """
         Draws the background and all active game objects to the screen.
 
@@ -162,6 +177,11 @@ class GameView:
             self.draw_object(game_object)
         self.draw_score(score, color)
         self.draw_high_score(high_score, color)
+        if game_over:
+            self.draw_game_over(score)
+        else:
+            for game_object in game_objects:
+                self.draw_object(game_object)
         pygame.display.update()
 
     def draw_score(self, score, color):
@@ -196,12 +216,33 @@ class GameView:
             game_object: An object in the game (fly/chameleon).
         """
         angle = game_object.direction.angle_to(UP)
-        rotated_surface = rotozoom(game_object.sprite, angle, 1.0)
-        rotated_surface_size = Vector2(rotated_surface.get_size())
-        blit_position = game_object.position - rotated_surface_size * 0.5
-        self.screen.blit(rotated_surface, blit_position)
-        if game_object == Chameleon:
-            game_object.sprite = game_object.no_tongue
+        if isinstance(game_object, Chameleon):
+            rotated_surface = rotozoom(game_object.sprite, angle, 1.0)
+            rotated_surface_size = Vector2(rotated_surface.get_size())
+            blit_position = game_object.position - rotated_surface_size * 0.5
+            self.screen.blit(rotated_surface, blit_position)
+        else:
+            rotated_surface = rotozoom(game_object.sprite, angle, 1.0)
+            rotated_surface_size = Vector2(rotated_surface.get_size())
+            blit_position = game_object.position - rotated_surface_size * 0.5
+            self.screen.blit(rotated_surface, blit_position)
+
+    def draw_game_over(self, score):
+        """
+        Draws the game over banner.
+
+        Args:
+            score (int): The player's score.
+        """
+        game_over_text = self.game_over_font.render(
+            f"Game Over, Your score is {score}, to keep playing press enter.",
+            True,
+            (255, 0, 0),
+        )
+        game_over_text_rect = game_over_text.get_rect(
+            center=(self.screen.get_width() // 2, self.screen.get_height() // 2)
+        )
+        self.screen.blit(game_over_text, game_over_text_rect)
 
 
 # Controller
