@@ -96,7 +96,7 @@ class Chameleon(GameObject):
 
     MANEUVERABILITY = 3
 
-    def __init__(self, position, screen):
+    def __init__(self, position, rotation_point, screen):
         """
         Initializes the Chameleon object.
 
@@ -107,22 +107,23 @@ class Chameleon(GameObject):
         self.direction = Vector2(UP)
         self.tongue = False
         self.tongue_out = pygame.transform.scale(
-            load_sprite("chamaeleon_with_tongue"), (150, 150)
+            load_sprite("chameleon_with_tongue"), (150, 500)
         )
 
         self.no_tongue = pygame.transform.scale(
-            load_sprite("chamaeleon_no_tongue"), (100, 100)
+            load_sprite("chameleon_no_tongue"), (150, 500)
         )
         self.tongue_start_time = 0
 
         super().__init__(
             position,
             pygame.transform.scale(
-                load_sprite("chamaeleon_no_tongue"), (100, 100)
+                load_sprite("chameleon_no_tongue"), (150, 500)
             ),
             Vector2(0),
             screen,
         )
+        self.rotation_point = Vector2(rotation_point)
 
     def rotate(self, clockwise=True):
         """
@@ -135,6 +136,9 @@ class Chameleon(GameObject):
         sign = 1 if clockwise else -1
         angle = self.MANEUVERABILITY * sign
         self.direction.rotate_ip(angle)
+        self.position = self.rotation_point + (
+            self.position - self.rotation_point
+        ).rotate(angle)
 
     def draw(self):
         """
@@ -197,7 +201,7 @@ class Fly(GameObject):
 
         super().__init__(
             position,
-            pygame.transform.scale(load_sprite("fly"), (20, 20)),
+            pygame.transform.scale(load_sprite("fly"), (30, 30)),
             get_random_velocity(1, 3),
             screen,
         )
