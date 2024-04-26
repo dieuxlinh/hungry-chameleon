@@ -81,8 +81,9 @@ class GameObject:
         Returns:
             bool: True if there is a collision; otherwise, False.
         """
-        distance = self.position.distance_to(other_obj.position)
-        return distance < self.radius + other_obj.radius
+        if other_obj:
+            distance = self.position.distance_to(other_obj.position)
+            return distance < self.radius + other_obj.radius
 
 
 class Chameleon(GameObject):
@@ -215,7 +216,7 @@ class Fly(GameObject):
         super().__init__(
             position,
             pygame.transform.scale(load_sprite("fly"), (30, 30)),
-            get_random_velocity(1, 3),
+            get_random_velocity(1, 2),
             screen,
         )
 
