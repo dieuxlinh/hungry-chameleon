@@ -155,27 +155,40 @@ class Chameleon(GameObject):
 
     def change_sprite(self):
         """
-        if space bar not pressed:
-            image = "chameleon_no_tongue"
-        else/ if space bar is pressed:
-            image = "chameleon_with_tongue" for 0.5 seconds
+        Changes chameleon sprite based on spacebar press.
         """
-
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_SPACE]:
             self.sprite = self.tongue_out
             self.tongue = True
-            self.tongue_start_time = (
-                pygame.time.get_ticks()
-            )  # Record the time when tongue was activated
+            self.tongue_start_time = pygame.time.get_ticks()
         elif (
-            pygame.time.get_ticks() - self.tongue_start_time >= 1000
-        ):  # If one second has passed
+            self.tongue
+            and pygame.time.get_ticks() - self.tongue_start_time >= 1000
+        ):
             self.sprite = self.no_tongue
             self.tongue = False
-        if not keys[pygame.K_SPACE]:
-            self.tongue_start_time = 0
+
+        self.update_tongue_time()
+
+    def update_tongue_time(self):
+        """
+        Updates the tongue time.
+        """
+        if (
+            self.tongue
+            and pygame.time.get_ticks() - self.tongue_start_time >= 1000
+        ):
+            self.sprite = self.no_tongue
+            self.tongue = False
+
+    def move(self):
+        """
+        Moves the chameleon and changes its sprite.
+        """
+        self.change_sprite()
+        super().move()
 
 
 class Fly(GameObject):
