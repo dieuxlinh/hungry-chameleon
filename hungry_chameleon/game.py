@@ -103,18 +103,13 @@ class GameModel:
         """
         for fly in self.fly:
             if fly.collides_with(self.chameleon):
-                if (
-                    self.chameleon.tongue
-                    and pygame.time.get_ticks() - self.tongue_time <= 1000
-                ):
+                if self.chameleon.tongue:
                     self.fly.remove(fly)
                     self.score += 100
                     if self.score > self.high_score:
                         self.high_score = self.score
                         self.save_high_score()
-                elif not self.chameleon.tongue and fly.collides_with(
-                    self.chameleon
-                ):
+                else:
                     self.chameleon = None
                     break
 
@@ -174,7 +169,7 @@ class GameView:
         """
         self.screen.blit(self.background, (0, 0))
         for game_object in game_objects:
-            self.draw_object(game_object)
+            game_object.draw()
         self.draw_score(score, color)
         self.draw_high_score(high_score, color)
         if game_over:
@@ -221,11 +216,12 @@ class GameView:
             rotated_surface_size = Vector2(rotated_surface.get_size())
             blit_position = game_object.position - rotated_surface_size * 0.5
             self.screen.blit(rotated_surface, blit_position)
+            """
         else:
             rotated_surface = rotozoom(game_object.sprite, angle, 1.0)
             rotated_surface_size = Vector2(rotated_surface.get_size())
             blit_position = game_object.position - rotated_surface_size * 0.5
-            self.screen.blit(rotated_surface, blit_position)
+            self.screen.blit(rotated_surface, blit_position)"""
 
     def draw_game_over(self, score):
         """
@@ -285,7 +281,7 @@ class GameController:
             "Instructions:",
             "Use LEFT and RIGHT arrow keys to rotate the chameleon.",
             "Press SPACE to catch flies with the chameleon's tongue.",
-            "Avoid colliding with flies without using the tongue.",
+            "Avoid colliding with flies when chameleon's tongue is not out.",
             "Press ENTER to start the game.",
         ]
 
