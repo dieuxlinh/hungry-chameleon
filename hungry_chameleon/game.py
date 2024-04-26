@@ -46,6 +46,7 @@ class GameModel:
         self.high_score = self.load_high_score()
         self.font = pygame.font.Font("Pulang.ttf", 40)
         self.tongue_time = 0
+        self.game_over = False
 
     def _init_flies(self, count):
         """
@@ -111,6 +112,7 @@ class GameModel:
                         self.save_high_score()
                 else:
                     self.chameleon = None
+                    self.game_over = True
                     break
 
     def load_high_score(self):
@@ -130,6 +132,9 @@ class GameModel:
         """
         with open(self.high_score_file, "w") as f:
             f.write(str(self.high_score))
+
+    def check_game_over(self):
+        return self.game_over
 
 
 # View
@@ -230,6 +235,7 @@ class GameView:
         Args:
             score (int): The player's score.
         """
+        # self.screen.fill((107, 142, 35))
         game_over_text = self.game_over_font.render(
             f"Game Over, Your score is {score}, to keep playing press enter.",
             True,
@@ -238,7 +244,31 @@ class GameView:
         game_over_text_rect = game_over_text.get_rect(
             center=(self.screen.get_width() // 2, self.screen.get_height() // 2)
         )
+        pygame.display.flip()
         self.screen.blit(game_over_text, game_over_text_rect)
+
+    """# INSTRUCTIONS
+        def display_instructions(self):
+        # Fill screen with green background
+        self.screen.fill((107, 142, 35))
+        y_offset = 100
+        for line in self.instructions_text:
+            text_surface = self.instructions_font.render(line, True, (0, 0, 0))
+            text_rect = text_surface.get_rect(center=(400, y_offset))
+            self.screen.blit(text_surface, text_rect)
+            y_offset += 40
+        pygame.display.flip()
+                self.instructions_font = pygame.font.Font("Pulang.ttf", 28)
+        self.instructions_text = [
+            "Welcome to Hungry Chameleon!",
+            "",
+            "Instructions:",
+            "Use LEFT and RIGHT arrow keys to rotate the chameleon.",
+            "Press SPACE to catch flies with the chameleon's tongue.",
+            "Avoid colliding with flies when chameleon's tongue is not out.",
+            "Press ENTER to start the game.",
+        ]
+"""
 
 
 # Controller
@@ -300,16 +330,17 @@ class GameController:
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 self.show_instructions = False
 
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT]:
-            self.model.chameleon.rotate(clockwise=False)
-        if keys[pygame.K_RIGHT]:
-            self.model.chameleon.rotate(clockwise=True)
-        if keys[pygame.K_SPACE]:
-            self.model.chameleon.tongue = True
-            self.model.chameleon.change_sprite()
-        else:
-            self.model.chameleon.tongue = False
+        if self.model.chameleon:
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_LEFT]:
+                self.model.chameleon.rotate(clockwise=False)
+            if keys[pygame.K_RIGHT]:
+                self.model.chameleon.rotate(clockwise=True)
+            if keys[pygame.K_SPACE]:
+                self.model.chameleon.tongue = True
+                self.model.chameleon.change_sprite()
+            else:
+                self.model.chameleon.tongue = False
 
     def display_instructions(self):
         # Fill screen with green background
@@ -333,6 +364,8 @@ class GameController:
 
     def game_loop(self):
         while self.running:
+            if self.model.check_game_over():
+                self.view.draw_game_over(self.model.score)
             self.handle_input()
             self.model.update()
             self.view.draw(
