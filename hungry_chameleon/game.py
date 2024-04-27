@@ -13,7 +13,6 @@ from utils import get_random_position, load_sprite
 from pygame.math import Vector2
 from pygame.transform import rotozoom
 
-
 UP = Vector2(0, -1)
 
 
@@ -27,6 +26,7 @@ class GameModel:
         screen (pygame.Surface): The display where game objects are drawn.
         chameleon (Chameleon): The main character controlled by the player.
         fly (list of Fly): List of fly objects that chameleon aims to catch.
+        score (int): The player's score
     """
 
     MIN_FLY_DISTANCE = 250
@@ -39,8 +39,14 @@ class GameModel:
             screen (pygame.Surface): The display surface.
         """
         self.screen = screen
-        self.chameleon = Chameleon((400, 300), self.screen)
+        self.chameleon = Chameleon((400, 190), (400, 290), self.screen)
         self.fly = self._init_flies(6)
+        self.score = 0
+        self.high_score_file = "HIGH_SCORE_FILE.txt"
+        self.high_score = self.load_high_score()
+        self.font = pygame.font.Font("Pulang.ttf", 40)
+        self.tongue_time = 0
+        self.game_over = False
 
     def _init_flies(self, count):
         """
@@ -74,6 +80,13 @@ class GameModel:
             game_object.move()
         self.check_collisions()
 
+    def update_tongue_time(self):
+        """
+        Updates the tongue time.
+        """
+        if self.chameleon.tongue:
+            self.tongue_time = pygame.time.get_ticks()
+
     def get_game_objects(self):
         """
         Retrieves all active game objects.
@@ -91,10 +104,37 @@ class GameModel:
         """
         for fly in self.fly:
             if fly.collides_with(self.chameleon):
-                if not self.chameleon.tongue:
+                if self.chameleon.tongue:
+                    self.fly.remove(fly)
+                    self.score += 100
+                    if self.score > self.high_score:
+                        self.high_score = self.score
+                        self.save_high_score()
+                else:
                     self.chameleon = None
+                    self.game_over = True
                     break
-                self.fly.remove(fly)
+
+    def load_high_score(self):
+        """
+        Loads the high score from the high score file.
+
+        Returns:
+            int: The high score.
+        """
+        with open(self.high_score_file, "r") as f:
+            high_score = int(f.read().strip())
+            return high_score
+
+    def save_high_score(self):
+        """
+        Saves the high score to the high score file.
+        """
+        with open(self.high_score_file, "w") as f:
+            f.write(str(self.high_score))
+
+    def check_game_over(self):
+        return self.game_over
 
 
 # View
@@ -117,10 +157,15 @@ class GameView:
         """
         self.screen = screen
         self.background = pygame.transform.scale(
-            load_sprite("Sky_Blue", False), (1000, 1000)
+            load_sprite("background_score", False), (850, 600)
         )
+        self.font = pygame.font.Font("Pulang.ttf", 38)
+        self.score_font = pygame.font.Font("Pulang.ttf", 38)
+        self.game_over_font = pygame.font.Font("Pulang.ttf", 64)
 
-    def draw(self, game_objects):
+    def draw(
+        self, game_objects, score, high_score, color=(0, 0, 0), game_over=False
+    ):
         """
         Draws the background and all active game objects to the screen.
 
@@ -129,9 +174,39 @@ class GameView:
         """
         self.screen.blit(self.background, (0, 0))
         for game_object in game_objects:
-            # game_object.draw()
-            self.draw_object(game_object)
+            game_object.draw()
+        self.draw_score(score, color)
+        self.draw_high_score(high_score, color)
+        if game_over:
+            self.draw_game_over(score)
+        else:
+            for game_object in game_objects:
+                self.draw_object(game_object)
         pygame.display.update()
+
+    def draw_score(self, score, color):
+        """
+        Draws the player's score on the screen.
+
+        Args:
+            score (int): The player's score.
+        """
+        score_text = self.font.render(f"Score: {score}", True, color)
+        self.screen.blit(score_text, (40, 13))
+
+    def draw_high_score(self, high_score, color):
+        """
+        Draws the player's high score on the screen.
+
+        Args:
+            high_score (int): The player's high score.
+            color (tuple): The color of the text.
+            position (tuple): The position of the text on the screen.
+        """
+        high_score_text = self.font.render(
+            f"High Score: {high_score}", True, color
+        )
+        self.screen.blit(high_score_text, (300, 13))
 
     def draw_object(self, game_object):
         """
@@ -141,12 +216,59 @@ class GameView:
             game_object: An object in the game (fly/chameleon).
         """
         angle = game_object.direction.angle_to(UP)
-        rotated_surface = rotozoom(game_object.sprite, angle, 1.0)
-        rotated_surface_size = Vector2(rotated_surface.get_size())
-        blit_position = game_object.position - rotated_surface_size * 0.5
-        self.screen.blit(rotated_surface, blit_position)
-        if game_object == Chameleon:
-            game_object.sprite = game_object.no_tongue
+        if isinstance(game_object, Chameleon):
+            rotated_surface = rotozoom(game_object.sprite, angle, 1.0)
+            rotated_surface_size = Vector2(rotated_surface.get_size())
+            blit_position = game_object.position - rotated_surface_size * 0.5
+            self.screen.blit(rotated_surface, blit_position)
+            """
+        else:
+            rotated_surface = rotozoom(game_object.sprite, angle, 1.0)
+            rotated_surface_size = Vector2(rotated_surface.get_size())
+            blit_position = game_object.position - rotated_surface_size * 0.5
+            self.screen.blit(rotated_surface, blit_position)"""
+
+    def draw_game_over(self, score):
+        """
+        Draws the game over banner.
+
+        Args:
+            score (int): The player's score.
+        """
+        # self.screen.fill((107, 142, 35))
+        game_over_text = self.game_over_font.render(
+            f"Game Over, Your score is {score}, to keep playing press enter.",
+            True,
+            (255, 0, 0),
+        )
+        game_over_text_rect = game_over_text.get_rect(
+            center=(self.screen.get_width() // 2, self.screen.get_height() // 2)
+        )
+        pygame.display.flip()
+        self.screen.blit(game_over_text, game_over_text_rect)
+
+    """# INSTRUCTIONS
+        def display_instructions(self):
+        # Fill screen with green background
+        self.screen.fill((107, 142, 35))
+        y_offset = 100
+        for line in self.instructions_text:
+            text_surface = self.instructions_font.render(line, True, (0, 0, 0))
+            text_rect = text_surface.get_rect(center=(400, y_offset))
+            self.screen.blit(text_surface, text_rect)
+            y_offset += 40
+        pygame.display.flip()
+                self.instructions_font = pygame.font.Font("Pulang.ttf", 28)
+        self.instructions_text = [
+            "Welcome to Hungry Chameleon!",
+            "",
+            "Instructions:",
+            "Use LEFT and RIGHT arrow keys to rotate the chameleon.",
+            "Press SPACE to catch flies with the chameleon's tongue.",
+            "Avoid colliding with flies when chameleon's tongue is not out.",
+            "Press ENTER to start the game.",
+        ]
+"""
 
 
 # Controller
@@ -171,6 +293,8 @@ class GameController:
         self.model = model
         self.view = view
         self.clock = pygame.time.Clock()
+        self.running = True
+        self.show_instructions = True
         self._init_pygame()
 
     def _init_pygame(self):
@@ -179,17 +303,17 @@ class GameController:
         """
         pygame.init()
         pygame.display.set_caption("Hungry Chameleon")
-
-    def run(self):
-        """
-        Main game loop that handles input, updates the game model, and renders
-        the game view.
-        """
-        while True:
-            self.handle_input()
-            self.model.update()
-            self.view.draw(self.model.get_game_objects())
-            self.clock.tick(60)
+        self.screen = pygame.display.set_mode((860, 600))
+        self.instructions_font = pygame.font.Font("Pulang.ttf", 28)
+        self.instructions_text = [
+            "Welcome to Hungry Chameleon!",
+            "",
+            "Instructions:",
+            "Use LEFT and RIGHT arrow keys to rotate the chameleon.",
+            "Press SPACE to catch flies with the chameleon's tongue.",
+            "Avoid colliding with flies when chameleon's tongue is not out.",
+            "Press ENTER to start the game.",
+        ]
 
     def handle_input(self):
         """
@@ -202,13 +326,51 @@ class GameController:
             if event.type == pygame.QUIT or (
                 event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
             ):
-                quit()
+                self.running = False
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                self.show_instructions = False
 
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT]:
-            self.model.chameleon.rotate(clockwise=False)
-        if keys[pygame.K_RIGHT]:
-            self.model.chameleon.rotate(clockwise=True)
-        if keys[pygame.K_SPACE]:
-            self.model.chameleon.tongue = True
-            self.model.chameleon.change_sprite()
+        if self.model.chameleon:
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_LEFT]:
+                self.model.chameleon.rotate(clockwise=False)
+            if keys[pygame.K_RIGHT]:
+                self.model.chameleon.rotate(clockwise=True)
+            if keys[pygame.K_SPACE]:
+                self.model.chameleon.tongue = True
+                self.model.chameleon.change_sprite()
+            else:
+                self.model.chameleon.tongue = False
+
+    def display_instructions(self):
+        # Fill screen with green background
+        self.screen.fill((107, 142, 35))
+        y_offset = 100
+        for line in self.instructions_text:
+            text_surface = self.instructions_font.render(line, True, (0, 0, 0))
+            text_rect = text_surface.get_rect(center=(400, y_offset))
+            self.screen.blit(text_surface, text_rect)
+            y_offset += 40
+        pygame.display.flip()
+
+    def run(self):
+        while self.running:
+            self.handle_input()
+            if self.show_instructions:
+                self.display_instructions()
+            else:
+                self.game_loop()
+        pygame.quit()
+
+    def game_loop(self):
+        while self.running:
+            if self.model.check_game_over():
+                self.view.draw_game_over(self.model.score)
+            self.handle_input()
+            self.model.update()
+            self.view.draw(
+                self.model.get_game_objects(),
+                self.model.score,
+                self.model.high_score,
+            )
+            self.clock.tick(60)

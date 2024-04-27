@@ -81,8 +81,9 @@ class GameObject:
         Returns:
             bool: True if there is a collision; otherwise, False.
         """
-        distance = self.position.distance_to(other_obj.position)
-        return distance < self.radius + other_obj.radius
+        if other_obj:
+            distance = self.position.distance_to(other_obj.position)
+            return distance < self.radius + other_obj.radius
 
 
 class Chameleon(GameObject):
@@ -96,7 +97,7 @@ class Chameleon(GameObject):
 
     MANEUVERABILITY = 3
 
-    def __init__(self, position, screen):
+    def __init__(self, position, rotation_point, screen):
         """
         Initializes the Chameleon object.
 
@@ -107,22 +108,23 @@ class Chameleon(GameObject):
         self.direction = Vector2(UP)
         self.tongue = False
         self.tongue_out = pygame.transform.scale(
-            load_sprite("chamaeleon_with_tongue"), (150, 150)
+            load_sprite("chameleon_with_tongue"), (150, 500)
         )
 
         self.no_tongue = pygame.transform.scale(
-            load_sprite("chamaeleon_no_tongue"), (100, 100)
+            load_sprite("chameleon_no_tongue"), (150, 500)
         )
         self.tongue_start_time = 0
 
         super().__init__(
             position,
             pygame.transform.scale(
-                load_sprite("chamaeleon_no_tongue"), (100, 100)
+                load_sprite("chameleon_no_tongue"), (150, 500)
             ),
             Vector2(0),
             screen,
         )
+        self.rotation_point = Vector2(rotation_point)
 
     def rotate(self, clockwise=True):
         """
@@ -135,6 +137,9 @@ class Chameleon(GameObject):
         sign = 1 if clockwise else -1
         angle = self.MANEUVERABILITY * sign
         self.direction.rotate_ip(angle)
+        self.position = self.rotation_point + (
+            self.position - self.rotation_point
+        ).rotate(angle)
 
     def draw(self):
         """
@@ -151,27 +156,40 @@ class Chameleon(GameObject):
 
     def change_sprite(self):
         """
-        if space bar not pressed:
-            image = "chameleon_no_tongue"
-        else/ if space bar is pressed:
-            image = "chameleon_with_tongue" for 0.5 seconds
+        Changes chameleon sprite based on spacebar press.
         """
-
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_SPACE]:
             self.sprite = self.tongue_out
             self.tongue = True
-            self.tongue_start_time = (
-                pygame.time.get_ticks()
-            )  # Record the time when tongue was activated
+            self.tongue_start_time = pygame.time.get_ticks()
         elif (
-            pygame.time.get_ticks() - self.tongue_start_time >= 1000
-        ):  # If one second has passed
+            self.tongue
+            and pygame.time.get_ticks() - self.tongue_start_time >= 1000
+        ):
             self.sprite = self.no_tongue
             self.tongue = False
-        if not keys[pygame.K_SPACE]:
-            self.tongue_start_time = 0
+
+        self.update_tongue_time()
+
+    def update_tongue_time(self):
+        """
+        Updates the tongue time.
+        """
+        if (
+            self.tongue
+            and pygame.time.get_ticks() - self.tongue_start_time >= 1000
+        ):
+            self.sprite = self.no_tongue
+            self.tongue = False
+
+    def move(self):
+        """
+        Moves the chameleon and changes its sprite.
+        """
+        self.change_sprite()
+        super().move()
 
 
 class Fly(GameObject):
@@ -197,8 +215,8 @@ class Fly(GameObject):
 
         super().__init__(
             position,
-            pygame.transform.scale(load_sprite("fly"), (20, 20)),
-            get_random_velocity(1, 3),
+            pygame.transform.scale(load_sprite("fly"), (30, 30)),
+            get_random_velocity(1, 2),
             screen,
         )
 
