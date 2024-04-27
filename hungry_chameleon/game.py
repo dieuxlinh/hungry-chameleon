@@ -161,7 +161,7 @@ class GameView:
         )
         self.font = pygame.font.Font("Pulang.ttf", 38)
         self.score_font = pygame.font.Font("Pulang.ttf", 38)
-        self.game_over_font = pygame.font.Font("Pulang.ttf", 64)
+        self.game_over_font = pygame.font.Font("Pulang.ttf", 32)
 
     def draw(
         self, game_objects, score, high_score, color=(0, 0, 0), game_over=False
@@ -237,7 +237,7 @@ class GameView:
         """
         # self.screen.fill((107, 142, 35))
         game_over_text = self.game_over_font.render(
-            f"Game Over, Your score is {score}, to keep playing press enter.",
+            f"Game Over, Your score is {score}.",
             True,
             (255, 0, 0),
         )
@@ -366,6 +366,7 @@ class GameController:
         while self.running:
             if self.model.check_game_over():
                 self.view.draw_game_over(self.model.score)
+                return
             self.handle_input()
             self.model.update()
             self.view.draw(
