@@ -157,11 +157,12 @@ class GameView:
         """
         self.screen = screen
         self.background = pygame.transform.scale(
-            load_sprite("background_score", False), (850, 600)
+            load_sprite("background_score", False), (860, 600)
         )
         self.font = pygame.font.Font("Pulang.ttf", 38)
         self.score_font = pygame.font.Font("Pulang.ttf", 38)
         self.game_over_font = pygame.font.Font("Pulang.ttf", 32)
+        self.overlay_color = (0, 0, 0, 128)
 
     def draw(
         self, game_objects, score, high_score, color=(0, 0, 0), game_over=False
@@ -221,12 +222,6 @@ class GameView:
             rotated_surface_size = Vector2(rotated_surface.get_size())
             blit_position = game_object.position - rotated_surface_size * 0.5
             self.screen.blit(rotated_surface, blit_position)
-            """
-        else:
-            rotated_surface = rotozoom(game_object.sprite, angle, 1.0)
-            rotated_surface_size = Vector2(rotated_surface.get_size())
-            blit_position = game_object.position - rotated_surface_size * 0.5
-            self.screen.blit(rotated_surface, blit_position)"""
 
     def draw_game_over(self, score):
         """
@@ -235,40 +230,39 @@ class GameView:
         Args:
             score (int): The player's score.
         """
-        # self.screen.fill((107, 142, 35))
-        game_over_text = self.game_over_font.render(
+        # Draw semi-transparent overlay
+        overlay = pygame.Surface(
+            (self.screen.get_width(), self.screen.get_height())
+        )
+        overlay.fill(self.overlay_color)
+        self.screen.blit(overlay, (0, 0))
+
+        # Draw game over text and display score
+        game_over_text_line1 = self.game_over_font.render(
             f"Game Over, Your score is {score}.",
             True,
             (255, 0, 0),
         )
-        game_over_text_rect = game_over_text.get_rect(
-            center=(self.screen.get_width() // 2, self.screen.get_height() // 2)
+        game_over_text_line2 = self.game_over_font.render(
+            "Press Enter to restart.",
+            True,
+            (255, 0, 0),
         )
+        game_over_text_rect_line1 = game_over_text_line1.get_rect(
+            center=(
+                self.screen.get_width() // 2,
+                self.screen.get_height() // 2 - 20,
+            )
+        )
+        game_over_text_rect_line2 = game_over_text_line2.get_rect(
+            center=(
+                self.screen.get_width() // 2,
+                self.screen.get_height() // 2 + 20,
+            )
+        )
+        self.screen.blit(game_over_text_line1, game_over_text_rect_line1)
+        self.screen.blit(game_over_text_line2, game_over_text_rect_line2)
         pygame.display.flip()
-        self.screen.blit(game_over_text, game_over_text_rect)
-
-    """# INSTRUCTIONS
-        def display_instructions(self):
-        # Fill screen with green background
-        self.screen.fill((107, 142, 35))
-        y_offset = 100
-        for line in self.instructions_text:
-            text_surface = self.instructions_font.render(line, True, (0, 0, 0))
-            text_rect = text_surface.get_rect(center=(400, y_offset))
-            self.screen.blit(text_surface, text_rect)
-            y_offset += 40
-        pygame.display.flip()
-                self.instructions_font = pygame.font.Font("Pulang.ttf", 28)
-        self.instructions_text = [
-            "Welcome to Hungry Chameleon!",
-            "",
-            "Instructions:",
-            "Use LEFT and RIGHT arrow keys to rotate the chameleon.",
-            "Press SPACE to catch flies with the chameleon's tongue.",
-            "Avoid colliding with flies when chameleon's tongue is not out.",
-            "Press ENTER to start the game.",
-        ]
-"""
 
 
 # Controller
@@ -295,6 +289,7 @@ class GameController:
         self.clock = pygame.time.Clock()
         self.running = True
         self.show_instructions = True
+        self.game_over = False
         self._init_pygame()
 
     def _init_pygame(self):
@@ -304,7 +299,8 @@ class GameController:
         pygame.init()
         pygame.display.set_caption("Hungry Chameleon")
         self.screen = pygame.display.set_mode((860, 600))
-        self.instructions_font = pygame.font.Font("Pulang.ttf", 28)
+        self.instructions_font = pygame.font.Font("Pulang.ttf", 26)
+        self.instructions_message_font = pygame.font.Font("Pulang.ttf", 20)
         self.instructions_text = [
             "Welcome to Hungry Chameleon!",
             "",
@@ -313,7 +309,9 @@ class GameController:
             "Press SPACE to catch flies with the chameleon's tongue.",
             "Avoid colliding with flies when chameleon's tongue is not out.",
             "Press ENTER to start the game.",
+            "Press ESC at anytime to quit the game.",
         ]
+        self.instructions_message = "P.S. Some flies are tougher than others and may need more than 1 attack"
 
     def handle_input(self):
         """
@@ -328,7 +326,11 @@ class GameController:
             ):
                 self.running = False
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                self.show_instructions = False
+                if self.show_instructions:
+                    self.show_instructions = False
+                elif self.game_over:
+                    self.model = GameModel(self.screen)
+                    self.game_over = False
 
         if self.model.chameleon:
             keys = pygame.key.get_pressed()
@@ -345,13 +347,41 @@ class GameController:
     def display_instructions(self):
         # Fill screen with green background
         self.screen.fill((107, 142, 35))
-        y_offset = 100
+        y_offset = (
+            self.screen.get_height() - (len(self.instructions_text) + 2) * 40
+        ) // 2
         for line in self.instructions_text:
             text_surface = self.instructions_font.render(line, True, (0, 0, 0))
-            text_rect = text_surface.get_rect(center=(400, y_offset))
+            text_rect = text_surface.get_rect(
+                center=(self.screen.get_width() // 2, y_offset)
+            )
             self.screen.blit(text_surface, text_rect)
             y_offset += 40
+        instructions_message_surface = self.instructions_message_font.render(
+            self.instructions_message, True, (0, 0, 0)
+        )
+        instructions_message_rect = instructions_message_surface.get_rect(
+            center=(self.screen.get_width() // 2, y_offset + 20)
+        )
+        self.screen.blit(
+            instructions_message_surface, instructions_message_rect
+        )
         pygame.display.flip()
+
+    def handle_game_over_input(self):
+        """
+        Handles user input when the game is over.
+
+        Returns:
+            bool: True if the game should restart, False otherwise.
+        """
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                return True
+            elif event.type == pygame.QUIT:
+                self.running = False
+                return False
+        return False
 
     def run(self):
         while self.running:
@@ -364,14 +394,18 @@ class GameController:
 
     def game_loop(self):
         while self.running:
-            if self.model.check_game_over():
-                self.view.draw_game_over(self.model.score)
-                return
+            if self.model.chameleon is None:
+                self.game_over = True
             self.handle_input()
             self.model.update()
             self.view.draw(
                 self.model.get_game_objects(),
                 self.model.score,
                 self.model.high_score,
+                game_over=self.game_over,
             )
+            if self.game_over:
+                if self.handle_game_over_input():
+                    self.model = GameModel(self.screen)
+                    self.game_over = False
             self.clock.tick(60)
