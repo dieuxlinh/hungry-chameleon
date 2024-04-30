@@ -12,7 +12,6 @@ Classes:
 """
 
 import pygame
-import time
 from pygame.math import Vector2
 from pygame.transform import rotozoom
 
@@ -83,7 +82,10 @@ class GameObject:
         """
         if other_obj:
             distance = self.position.distance_to(other_obj.position)
-            return distance < self.radius + other_obj.radius
+            if hasattr(other_obj, "tongue"):
+                if other_obj.tongue:
+                    return distance < (self.radius + other_obj.radius + 100)
+            return distance < (self.radius + other_obj.radius - 10)
 
 
 class Chameleon(GameObject):

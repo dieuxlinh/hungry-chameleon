@@ -39,7 +39,7 @@ class GameModel:
             screen (pygame.Surface): The display surface.
         """
         self.screen = screen
-        self.chameleon = Chameleon((400, 190), (400, 290), self.screen)
+        self.chameleon = Chameleon((400, 300), (400, 300), self.screen)
         self.fly = self._init_flies(6)
         self.score = 0
         self.high_score_file = "HIGH_SCORE_FILE.txt"
@@ -134,6 +134,12 @@ class GameModel:
             f.write(str(self.high_score))
 
     def check_game_over(self):
+        """
+        Checks if game is over
+
+        Returns:
+            game_over (bool): True if game is over, false otherwise
+        """
         return self.game_over
 
 
@@ -345,6 +351,9 @@ class GameController:
                 self.model.chameleon.tongue = False
 
     def display_instructions(self):
+        """
+        Displays the instructions of the game before playing
+        """
         # Fill screen with green background
         self.screen.fill((107, 142, 35))
         y_offset = (
@@ -378,12 +387,16 @@ class GameController:
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 return True
-            elif event.type == pygame.QUIT:
+            if event.type == pygame.QUIT:
                 self.running = False
                 return False
         return False
 
     def run(self):
+        """
+        Initial running game loop, used to remove instructions when enter is
+        pressed.
+        """
         while self.running:
             self.handle_input()
             if self.show_instructions:
@@ -393,6 +406,10 @@ class GameController:
         pygame.quit()
 
     def game_loop(self):
+        """
+        Game loop. Calls appropriate functions to make the game and input work
+        correctly.
+        """
         while self.running:
             if self.model.chameleon is None:
                 self.game_over = True

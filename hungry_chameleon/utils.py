@@ -34,8 +34,7 @@ def load_sprite(name, with_alpha=True):
 
     if with_alpha:
         return loaded_sprite.convert_alpha()
-    else:
-        return loaded_sprite.convert()
+    return loaded_sprite.convert()
 
 
 def wrap_position(position, screen):
