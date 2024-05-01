@@ -50,7 +50,7 @@ class GameModel:
         self.score = 0
         self.high_score_file = "HIGH_SCORE_FILE.txt"
         self.high_score = self.load_high_score()
-        self.font = pygame.font.Font("Pulang.ttf", 40)
+        self.font = pygame.font.Font("assets/fonts/Pulang.ttf", 40)
         self.tongue_time = 0
         self.game_over = False
 
@@ -178,9 +178,9 @@ class GameView:
         self.background = pygame.transform.scale(
             load_sprite("background_score", False), (860, 600)
         )
-        self.font = pygame.font.Font("Pulang.ttf", 38)
-        self.score_font = pygame.font.Font("Pulang.ttf", 38)
-        self.game_over_font = pygame.font.Font("Pulang.ttf", 32)
+        self.font = pygame.font.Font("assets/fonts/Pulang.ttf", 38)
+        self.score_font = pygame.font.Font("assets/fonts/Pulang.ttf", 38)
+        self.game_over_font = pygame.font.Font("assets/fonts/Pulang.ttf", 32)
         self.overlay_color = (0, 0, 0, 128)
 
     def draw(
@@ -327,8 +327,10 @@ class GameController:
         pygame.init()
         pygame.display.set_caption("Hungry Chameleon")
         self.screen = pygame.display.set_mode((860, 600))
-        self.instructions_font = pygame.font.Font("Pulang.ttf", 26)
-        self.instructions_message_font = pygame.font.Font("Pulang.ttf", 20)
+        self.instructions_font = pygame.font.Font("assets/fonts/Pulang.ttf", 26)
+        self.instructions_message_font = pygame.font.Font(
+            "assets/fonts/Pulang.ttf", 20
+        )
         self.instructions_text = [
             "Welcome to Hungry Chameleon!",
             "",
