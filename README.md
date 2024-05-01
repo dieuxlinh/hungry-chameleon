@@ -1,4 +1,4 @@
-# Softdes-2024 final project
+# Softdes-2024 Final Project
 
 An interactive game where user’s control the orientation of a chameleon trying to catch all the moving flies.  
 
@@ -32,6 +32,7 @@ python main.py
     `utils.py` Helper functions for game operations.
     `test_game.py` Unit tests for the game.py module
     `test_utils.py` Unit tests for the utils.py module
+    `assets/` Contains all images and fonts used in the game.
 
 
 ### File Description 
