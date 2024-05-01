@@ -51,14 +51,6 @@ class GameObject:
         self.velocity = Vector2(velocity)
         self.screen = screen
 
-    def draw(self):
-        """
-        NOT USED
-        Draws the object's sprite at its current position on the screen.
-        """
-        blit_position = self.position - Vector2(self.radius)
-        self.screen.blit(self.sprite, blit_position)
-
     def move(self):
         """
         Updates the object's position based on its velocity.
@@ -95,6 +87,12 @@ class Chameleon(GameObject):
 
     Attributes:
         direction (Vector2): The current facing direction of the chameleon.
+        rotation_point (tuple): The pivot point of the sprite used
+        tongue (bool): A boolean that turns True if the chameleon tongue is out
+        tongue_out (pygame.Surface): The sprite with the tongue out
+        no_tongue (pygame.Surface): The sprite with no tognue
+        tongue_start_time (int): Holds time elapsed since spacebar pressed.
+
     """
 
     MANEUVERABILITY = 3
@@ -105,6 +103,7 @@ class Chameleon(GameObject):
 
         Args:
             position (tuple): The initial position of the Chameleon.
+            rotation_point (tuple): The pivot point of the sprite used
             screen (pygame.Surface): The screen on which the Chameleon is drawn.
         """
         self.direction = Vector2(UP)
@@ -145,7 +144,6 @@ class Chameleon(GameObject):
 
     def draw(self):
         """
-        NOT USED
         Draws the Chameleon with the current rotation applied to the
         sprite.
         """
@@ -224,7 +222,6 @@ class Fly(GameObject):
 
     def draw(self):
         """
-        NOT USED
         Draws the Fly with the current rotation applied to the sprite.
         """
         angle = self.direction.angle_to(UP)

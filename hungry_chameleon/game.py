@@ -27,6 +27,12 @@ class GameModel:
         chameleon (Chameleon): The main character controlled by the player.
         fly (list of Fly): List of fly objects that chameleon aims to catch.
         score (int): The player's score
+        high_score_file (str): The path of the txt file holding the user's high
+        score
+        high_score (int): The user's high score
+        font (pygame.font): The font used to display text
+        tongue_time (int): Stores how long the chameleon has had the tongue out
+        game_over (bool): Stores whether the game is active or not
     """
 
     MIN_FLY_DISTANCE = 250
@@ -152,6 +158,13 @@ class GameView:
     Attributes:
         screen (pygame.Surface): The display surface for drawing the game.
         background (pygame.Surface): The background image of the game scene.
+        font (pygame.font): The font used in the game
+        score_font (pygame.font): The font used in the game to display score
+        game_over_font (pygame.font): The font used in the game to display game
+        over message
+        overlay_color (tuple): Holds the background color for instructions page
+
+
     """
 
     def __init__(self, screen):
@@ -178,6 +191,10 @@ class GameView:
 
         Args:
             game_objects (list): A list of game objects to be drawn.
+            score (int): The player's score
+            high_score (int): The user's high score
+            color (tuple):  The color black
+            game_over (bool): Used to determine if the game is over or not.
         """
         self.screen.blit(self.background, (0, 0))
         for game_object in game_objects:
@@ -197,6 +214,8 @@ class GameView:
 
         Args:
             score (int): The player's score.
+            color (tuple):  The color ir the text.
+
         """
         score_text = self.font.render(f"Score: {score}", True, color)
         self.screen.blit(score_text, (40, 13))
@@ -280,6 +299,9 @@ class GameController:
         model (GameModel): The game's model managing the state.
         view (GameView): The game's view handling rendering.
         clock (pygame.time.Clock): Clock for managing the game's frame rate.
+        running (bool): checks to see if the game loop is running
+        show_instructions (bool): checks whether we are on initial screen
+        game_over (bool): checks whether the game is on or over
     """
 
     def __init__(self, model, view):
