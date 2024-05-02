@@ -1,5 +1,8 @@
 # Softdes-2024 Final Project
 
+Project website: https://luludlpp.github.io/hungrychameleon/
+
+
 An interactive game where user’s control the orientation of a chameleon trying to catch all the moving flies.  
 
 ## How to Use
